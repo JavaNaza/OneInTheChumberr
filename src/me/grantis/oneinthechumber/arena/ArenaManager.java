@@ -1,10 +1,9 @@
 package me.grantis.oneinthechumber.arena;
 
 import me.grantis.oneinthechumber.OneInTheChumber;
-import me.grantis.oneinthechumber.config.ArenaConfig;
+import me.grantis.oneinthechumber.config.ConfigFile;
 import me.grantis.oneinthechumber.utils.ChatUtils;
 import me.grantis.oneinthechumber.utils.LocationUtils;
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
@@ -16,11 +15,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+
 public class ArenaManager {
 
-    static ArenaConfig aConfig = new ArenaConfig(OneInTheChumber.plugin);
-
     public static ArrayList<Arena> arenas = new ArrayList<Arena>();
+
+    private static ConfigFile arenaConfig = OneInTheChumber.plugin.getArenasFile();
 
     public static Arena createArena(String name, Location loc) {
         for(Arena a : arenas) {
@@ -28,17 +28,17 @@ public class ArenaManager {
                 return null;
             }
         }
-        Arena a = new Arena(name, loc, new HashMap<Integer, Location>(),1);
+        Arena a = new Arena(name, loc, new HashMap<>(),1);
 
         arenas.add(a);
-        aConfig.getConfig().set("Arenas." + name + ".location", LocationUtils.serializeLoc(loc));
-        aConfig.save();
+
+        arenaConfig.getConfig().set("Arenas." + name + ".location", LocationUtils.serializeLoc(loc));
+        arenaConfig.save();
         return a;
     }
 
     public static void removeArena(String name, CommandSender sender) {
-        Arena a = null;
-        a = getArena(name);
+        Arena a = getArena(name);
         if(a == null) {
             sender.sendMessage(ChatUtils.preffix() + ChatColor.RED + "ERROR: Arena '" + name + "' not found !");
             return;
@@ -46,8 +46,8 @@ public class ArenaManager {
 
         else {
             arenas.remove(a);
-            aConfig.getConfig().set("Arenas." + name, null);
-            aConfig.save();
+            arenaConfig.getConfig().set("Arenas." + name, null);
+            arenaConfig.save();
             sender.sendMessage(ChatUtils.preffix() + ChatColor.GREEN + "Arena '" + name + "' has been removed !");
         }
 
@@ -63,8 +63,8 @@ public class ArenaManager {
 
         int num = a.getSpawnNumber();
         a.getSpawns().put(num, loc);
-        aConfig.getConfig().set("Arenas." + arenaName + ".spawns." + num, LocationUtils.serializeLoc(loc));
-        aConfig.save();
+        arenaConfig.getConfig().set("Arenas." + arenaName + ".spawns." + num, LocationUtils.serializeLoc(loc));
+        arenaConfig.save();
         player.sendMessage(ChatUtils.preffix() + ChatColor.GREEN + "The '" + num + "' spawn has been added to Arena '" + arenaName + "' !");
         num++;
         a.setSpawnNumber(num);
@@ -80,8 +80,8 @@ public class ArenaManager {
 
         if(a.getSpawns().containsKey(spawnNumber)) {
             a.getSpawns().remove(spawnNumber);
-            aConfig.getConfig().set("Arenas." + arenaName + ".spawns." + spawnNumber, null);
-            aConfig.save();
+            arenaConfig.getConfig().set("Arenas." + arenaName + ".spawns." + spawnNumber, null);
+            arenaConfig.save();
             sender.sendMessage(ChatUtils.preffix() + ChatColor.GREEN + "Spawn '" + spawnNumber + "' has been removed from Arena '" + arenaName + "' !");
         }
 
@@ -93,33 +93,22 @@ public class ArenaManager {
 
     public static void loadArenas() {
 
-       ConfigurationSection section = aConfig.getConfig().getConfigurationSection("Arenas");
-        System.out.println("--------------------------");
-        System.out.println(section);
-        System.out.println("--------------------------");
-        if(section == null) {
-            aConfig.getConfig().createSection("Arenas");
-            System.out.println("Section created");
-            //return;
-        }
+        if(arenaConfig.getConfigurationSection("Arenas") == null)  arenaConfig.createSection("Arenas");
 
-        //section = OneInTheChumber.getArenaConfig().getConfig().getConfigurationSection("Arenas");//NOTE
-        Set<String> arenaNames = section.getKeys(false);
+        Set<String> arenaNames = arenaConfig.getConfigurationSection("Arenas").getKeys(false);
         if(arenaNames.size() == 0) {
-            System.out.println("Arenas size");
             return;
-        }
-        else {
-            for(String arenaName : aConfig.getConfig().getConfigurationSection("Arenas").getKeys(false)) {
-                Location loc = LocationUtils.deserializeLoc(aConfig.getConfig().getString("Arenas." + arenaName + ".location"));
-                Map<Integer, Location> spawns = new HashMap<Integer, Location>();
+        } else {
+            for(String arenaName : arenaNames) {
+                Location loc = LocationUtils.deserializeLoc(arenaConfig.getConfig().getString("Arenas." + arenaName + ".location"));
+                Map<Integer, Location> spawns = new HashMap<>();
                 String spawnPath = "Arenas." + arenaName + ".spawns";
                 int lastSpawnNumber = 1;
-                if(aConfig.getConfig().getConfigurationSection(spawnPath).getKeys(false).isEmpty()) {}
+                if(arenaConfig.getConfigurationSection(spawnPath).getKeys(false).isEmpty()) {}
                 else {
-                    for (String spawnNumber : aConfig.getConfig().getConfigurationSection(spawnPath).getKeys(false)) {
+                    for (String spawnNumber : arenaConfig.getConfigurationSection(spawnPath).getKeys(false)) {
                         int num = Integer.parseInt(spawnNumber);
-                        Location spawnsLoc = LocationUtils.deserializeLoc(aConfig.getConfig().getString("Arenas." + arenaName + ".spawns." + num));
+                        Location spawnsLoc = LocationUtils.deserializeLoc(arenaConfig.getConfig().getString("Arenas." + arenaName + ".spawns." + num));
                         spawns.put(num, spawnsLoc);
                         lastSpawnNumber = num;
                     }

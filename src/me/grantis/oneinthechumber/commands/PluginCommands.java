@@ -3,7 +3,6 @@ package me.grantis.oneinthechumber.commands;
 import me.grantis.oneinthechumber.OneInTheChumber;
 import me.grantis.oneinthechumber.arena.Arena;
 import me.grantis.oneinthechumber.arena.ArenaManager;
-import me.grantis.oneinthechumber.config.ArenaConfig;
 import me.grantis.oneinthechumber.utils.ChatUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
@@ -17,7 +16,6 @@ import java.util.List;
 public class PluginCommands implements CommandExecutor {
 
     //Config objects here:
-    ArenaConfig arenaConfig = new ArenaConfig(OneInTheChumber.plugin);
    public static List<String> commandListPlayers = new ArrayList<String>();
    public static List<String> commandListAdmin = new ArrayList<String>();
     @Override
@@ -35,8 +33,7 @@ public class PluginCommands implements CommandExecutor {
                         if (args[0].equalsIgnoreCase("reload")) {
                             if(sender.hasPermission(ChatUtils.adminPermission())) {
 
-                                OneInTheChumber.plugin.reloadConfig();
-                                arenaConfig.load();
+                                OneInTheChumber.plugin.reloadFiles();
 
                                 sender.sendMessage(ChatUtils.preffix() + ChatColor.GREEN + "Configs has been reloaded !");
                             }

@@ -1,5 +1,7 @@
 package me.grantis.oneinthechumber.config;
 
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
 
@@ -10,43 +12,69 @@ import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 
-public class ArenaConfig {
+public class ConfigFile {
 
     private YamlConfiguration config;
     private File file;
-    private Plugin plugin;
 
-    public ArenaConfig(Plugin plugin) {
-        this.plugin = plugin;
-        this.file = new File(plugin.getDataFolder(), "arenas.yml");
-        this.config = new YamlConfiguration();
+    public static final char PATH_SEPARATOR = '.';
+
+    public ConfigFile(Plugin plugin, String filename) {
+        this.file = new File(plugin.getDataFolder(), filename);
     }
 
-    public Plugin getPlugin() {
-        return this.plugin;
-    }
-
-    public File getFile() {
-        return this.file;
-    }
 
     public YamlConfiguration getConfig() {
         return this.config;
     }
 
     public void load() {
-
+        config = new YamlConfiguration();
         try {
             if (!this.file.exists()) {
                 this.file.getParentFile().mkdirs();
                 this.writeToFile(this.file.getName(), this.file);
             }
 
-            this.config.load(this.file);
-
+            this.loadConfig();
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public ConfigurationSection getConfigurationSection(String path) {
+        return this.config.getConfigurationSection(path);
+    }
+
+    public void createSection(String path) {
+        this.config.createSection(path);
+        this.save();
+    }
+
+    public Object getValue(String path) {
+        return this.config.get(path);
+    }
+
+    public boolean exists(String path) {
+        return this.getValue(path) == null;
+    }
+
+    public void setValue(String path, Object value) {
+        this.config.set(path, value);
+        this.save();
+    }
+
+    private void loadConfig() throws IOException, InvalidConfigurationException {
+        if(this.config == null) {
+            throw new NullPointerException("Error Could not load " + file.getAbsolutePath());
+        } else {
+            this.config.load(this.file);
+        }
+    }
+
+    public void reload() {
+        this.load();
+        this.save();
     }
 
     public void delete() {
@@ -62,7 +90,7 @@ public class ArenaConfig {
     }
 
 
-    public void writeToFile(String source, File destination) {
+    private void writeToFile(String source, File destination) {
         InputStream is = null;
         FileOutputStream os = null;
         try {
@@ -89,7 +117,7 @@ public class ArenaConfig {
         }
     }
 
-    public InputStream getResource(String filename) {
+    private InputStream getResource(String filename) {
         if (filename == null) {
             throw new IllegalArgumentException("Filename cannot be null");
         } else {
