@@ -1,0 +1,6 @@
+name: OneInTheChumber
+version: 1.0
+main: me.grantis.oneinthechumber.OneInTheChumber
+description: test.
+commands:
+  oitc:
